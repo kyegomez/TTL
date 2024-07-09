@@ -1,7 +1,8 @@
-import torch 
+import torch
 from torch import nn, Tensor
 from typing import List
-    
+
+
 class Task(nn.Module):
     """
     A class representing a task in a neural network model.
@@ -26,12 +27,12 @@ class Task(nn.Module):
         super(Task, self).__init__()
         self.d1 = d1
         self.d2 = d2
-        
+
         # Theta
-        self.t_k = nn.Parameter(torch.randn(d1, d2))
-        self.t_v = nn.Parameter(torch.randn(d1, d2))
-        self.t_q = nn.Parameter(torch.randn(d1, d2))
-        
+        self.t_k = nn.Parameter(torch.randn(1, d1, d2))
+        self.t_v = nn.Parameter(torch.randn(1, d1, d2))
+        self.t_q = nn.Parameter(torch.randn(1, d1, d2))
+
     def loss(self, f, x: Tensor) -> Tensor:
         """
         Computes the loss between the predicted output and the target output.
@@ -46,10 +47,8 @@ class Task(nn.Module):
         """
         train_view = self.t_k @ x
         label_view = self.t_v @ x
-        return nn.functional.mse_loss(
-            f(train_view), label_view
-        )
-    
+        return nn.functional.mse_loss(f(train_view), label_view)
+
 
 class OGD(nn.Module):
     """
@@ -65,15 +64,12 @@ class OGD(nn.Module):
         step(model, grad_in): Performs a single optimization step.
 
     """
+
     def __init__(self, lr: float = 0.01):
         super(OGD, self).__init__()
         self.lr = lr
-    
-    def step(
-        self,
-        model: nn.Module,
-        grads: List[Tensor]
-    ):
+
+    def step(self, model: nn.Module, grads: List[Tensor]):
         """
         Performs a single optimization step.
 
@@ -85,8 +81,7 @@ class OGD(nn.Module):
         with torch.no_grad():
             for param, grad in zip(model.parameters(), grads):
                 param -= self.lr * grad
-                
-                
+
 
 class Learner(nn.Module):
     """
@@ -103,21 +98,13 @@ class Learner(nn.Module):
         optim (OGD): The optimizer for training the model.
     """
 
-    def __init__(
-        self,
-        task: Task,
-        dim: int,
-        output_dim: int
-    ):
+    def __init__(self, task: Task, dim: int, output_dim: int):
         super(Learner, self).__init__()
         self.task = task
         self.model = nn.Linear(dim, output_dim)
         self.optim = OGD()
-    
-    def train(
-        self,
-        x: Tensor
-    ):
+
+    def train(self, x: Tensor):
         """
         Trains the learner model using the given input.
 
@@ -128,15 +115,13 @@ class Learner(nn.Module):
             None
         """
         loss = self.task.loss(self.model, x)
-        
+
         grad_fn = torch.autograd.grad(
-            loss,
-            self.model.parameters(),
-            create_graph=True
+            loss, self.model.parameters(), create_graph=True
         )
-        
+
         self.optim.step(self.model, grad_fn)
-    
+
     def predict(self, x: Tensor) -> Tensor:
         """
         Predicts the output for the given input.
@@ -149,7 +134,7 @@ class Learner(nn.Module):
         """
         view = self.task.t_q @ x
         return self.model(view)
-    
+
 
 class TTLinear(nn.Module):
     """
@@ -174,22 +159,14 @@ class TTLinear(nn.Module):
 
     """
 
-    def __init__(
-        self, 
-        d1: int,
-        d2: int,
-        input_dim: int,
-        output_dim: int
-    ):
+    def __init__(self, input_dim: int, output_dim: int):
         super(TTLinear, self).__init__()
-        self.d1 = d1
-        self.d2 = d2
         self.input_dim = input_dim
         self.output_dim = output_dim
-        self.task = Task(d1, d2)
-        
+        self.task = Task(input_dim, output_dim)
+
         self.learner = Learner(self.task, input_dim, output_dim)
-        
+
     def forward(self, in_seq: List[Tensor]) -> List[Tensor]:
         """
         Performs forward pass on the input sequence.
@@ -202,12 +179,10 @@ class TTLinear(nn.Module):
 
         """
         out_seq = []
-        
+
         # for each token in the input sequence
         # train the model and predict the output
         for tok in in_seq:
             self.learner.train(tok)
             out_seq.append(self.learner.predict(tok))
         return out_seq
-    
-    
