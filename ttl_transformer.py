@@ -39,7 +39,7 @@ class TTLMLP(nn.Module):
         self.fc2 = TTLinear(expanse_factor * dim, dim)
         self.norm = RMSNorm(dim)
         self.act = SwiGLU(dim)
-        
+
     def forward(self, x: Tensor) -> Tensor:
         residual = x
         x = self.fc1(x)
@@ -47,7 +47,7 @@ class TTLMLP(nn.Module):
         x = self.fc2(x)
         x = self.norm(x + residual)
         return x
-        
+
 
 class TTLTransformerBlock(nn.Module):
     """
@@ -109,4 +109,3 @@ class TTLTransformerBlock(nn.Module):
 # # Forward pass
 # output = model(q, k, v)
 # print(f"Output shape: {output.shape}")
-        
