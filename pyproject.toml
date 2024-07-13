@@ -4,7 +4,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name = "ttl-torch"
-version = "0.0.1"
+version = "0.0.4"
 description = "Paper - Pytorch"
 license = "MIT"
 authors = ["Kye Gomez <kye@apac.ai>"]
@@ -25,6 +25,7 @@ classifiers = [
 python = "^3.10"
 torch = "*"
 loguru = "*"
+zetascale = "*"
 
 
 [tool.poetry.group.lint.dependencies]
