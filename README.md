@@ -36,6 +36,28 @@ for i, output in enumerate(output_data):
 ```
 
 
+## TTL Transformer
+
+
+```python
+# Model
+model = TTLTransformerBlock(input_dim=512, output_dim=512)
+
+# Input
+q = torch.randn(512, 512)
+
+k = torch.randn(512, 512)
+
+v = torch.randn(512, 512)
+
+# Forward pass
+output = model(q, k, v)
+print(f"Output shape: {output.shape}")
+
+
+```
+
+
 # License
 MIT
 
